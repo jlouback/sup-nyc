@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:web="http://xmlns.jcp.org/xml/ns/javaee">
+  <servlet>
+    <servlet-name>Sup</servlet-name>
+    <servlet-class>ServletSup</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Sup</servlet-name>
+    <url-pattern>/Sup</url-pattern>
+  </servlet-mapping>
+</web-app>
