@@ -8,28 +8,24 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import models.Event;
-
-import com.amazonaws.util.json.JSONException;
-
 @WebServlet("/tweet_points")
-public class TweetPointsController extends HttpServlet {
+public class EventsController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    public TweetPointsController() {
+    
+    public EventsController() {
         super();
     }
 
     @Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    	if (request.getParameter("keyword") != null) {
-			String keyword = (String) request.getParameter("keyword");
-			try {
-				response.getWriter().write(Event.retrieveClustersForKeyword(keyword).toString());
-			} catch (JSONException e) {
-				e.printStackTrace();
+    	if (request.getParameter("type") != null) {
+			String keyword = (String) request.getParameter("type");
+//			try {
 				response.getWriter().write("{}");
-			}
+//			} catch (JSONException e) {
+//				e.printStackTrace();
+//				response.getWriter().write("{}");
+//			}
     	}
     	else {
     		response.getWriter().write("{}");
@@ -37,4 +33,5 @@ public class TweetPointsController extends HttpServlet {
     	
 	}
 	
+
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import models.Event;
 import models.User;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -18,7 +19,6 @@ public class ApplicationHelper implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent arg0) {
 		try {
 			ApplicationHelper.ensureTablesExist();
-			ApplicationHelper.subscribeToReceiveNotifications();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -43,23 +43,7 @@ public class ApplicationHelper implements ServletContextListener {
 	
 	static public void ensureTablesExist() throws IOException {
 		User.ensureTableExists();
-//		Tweets.ensureTableExists();
+		Event.ensureTableExists();
 	}
 
-	static final String TWEETS_COMPRESSED_TOPIC_NAME = "assignment2_tweets_compressed";
-	static final String ENDPOINT_URL = "http://jhm-assignment.elasticbeanstalk.com/sns_notifications";
-	
-	private static void subscribeToReceiveNotifications() {
-		try {
-			SnsHelper snsHelper = SnsHelper.getInstance();
-			String topicArn = snsHelper.getTopicArn(TWEETS_COMPRESSED_TOPIC_NAME);
-			if (topicArn != null) {
-				if (!snsHelper.checkIfSubscribed(topicArn, ENDPOINT_URL)) {
-					snsHelper.subscribeToTopicViaHttp(topicArn, ENDPOINT_URL);
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }
