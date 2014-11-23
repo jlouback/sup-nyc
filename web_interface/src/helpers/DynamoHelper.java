@@ -20,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndex;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
@@ -123,6 +124,52 @@ public class DynamoHelper {
 		}
 	}
 	
+	/**
+	 * Creates a new Dynamo Table. 
+	 * The caller should check before calling this function if a table with the same name does not
+	 * already exist. This method does busy waiting and can take up to 120s to return. To see how 
+	 * to create the parameters to this function refer to:
+	 * http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LowLevelJavaWorkingWithTables.html#LowLevelJavaCreate
+	 */
+	public void createTable(ArrayList<AttributeDefinition> attributes, ArrayList<KeySchemaElement> keySchema, Long readCapacity, Long writeCapacity, String tableName, ArrayList<LocalSecondaryIndex> localSecondaryIndexes) throws AmazonServiceException{
+		// provisions 4 reads and 1 write per sec 
+		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
+			.withReadCapacityUnits(readCapacity)
+			.withWriteCapacityUnits(writeCapacity);
+		
+		CreateTableRequest request = new CreateTableRequest()
+			.withTableName(tableName)
+			.withAttributeDefinitions(attributes)
+			.withKeySchema(keySchema)
+			.withProvisionedThroughput(provisionedThroughput)
+			.withLocalSecondaryIndexes(localSecondaryIndexes);
+		mDynamoDBClient.createTable(request);
+		
+		// wait for table creation
+		int triesLeft = 10;
+		int secondsBetweenTrials = 12;
+		while (triesLeft > 0) {
+			try {
+				TableDescription tableDescription = mDynamoDBClient.describeTable(tableName).getTable();
+				String status = tableDescription.getTableStatus();
+				if (status.equals(TableStatus.ACTIVE.toString())) {
+					break;
+				}
+			}
+			catch (ResourceNotFoundException e) {}
+			triesLeft -= 1;
+			try {
+				Thread.sleep(secondsBetweenTrials * 1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		if (triesLeft == 0) {
+			throw new AmazonServiceException("Could not create DynamoDB table (it was created but never appeared as active).");
+		}
+	}
+	
 	public boolean putItem(String tableName, Map<String, AttributeValue> attributeMap) {
 		try {			
 			PutItemRequest putItemRequest = new PutItemRequest()
@@ -194,6 +241,53 @@ public class DynamoHelper {
 		Map<String, Condition> keyConditions = new HashMap<String, Condition>();
 		keyConditions.put(primaryKeyName, primaryKeyCondition);
 	
+		return query(tableName, keyConditions, null);
+	}
+	
+	/**
+	 * Gets all items by its primary key and a range greater than some threshold (for tables with range key).
+	 * Returns a list of map of attributes
+	 */
+	public List<Map<String, AttributeValue>> queryByPrimaryKeyAndRangeKey(String tableName, String primaryKeyName, String primaryKeyValue, String rangeKeyName, String rangeKeyStart, String rangeKeyEnd) {
+		Condition primaryKeyCondition = new Condition()
+		    .withComparisonOperator(ComparisonOperator.EQ)
+		    .withAttributeValueList(new AttributeValue().withS(primaryKeyValue));
+		
+		Condition rangeKeyCondition = new Condition()
+			.withComparisonOperator(ComparisonOperator.BETWEEN)
+			.withAttributeValueList(
+					new AttributeValue().withS(rangeKeyStart),
+					new AttributeValue().withS(rangeKeyEnd)
+			);
+		
+		Map<String, Condition> keyConditions = new HashMap<String, Condition>();
+		keyConditions.put(primaryKeyName, primaryKeyCondition);
+		keyConditions.put(rangeKeyName, rangeKeyCondition);
+	
+		return query(tableName, keyConditions, null);
+	}
+	
+	/**
+	 * Gets all items by its primary key and a index with some prefix (for tables with range key).
+	 * Returns a list of map of attributes
+	 */
+	public List<Map<String, AttributeValue>> queryByPrimaryKeyAndIndexPrefix(String tableName, String primaryKeyName, String primaryKeyValue, String indexKeyName, String indexKeyPrefix, String indexName) {
+		Condition primaryKeyCondition = new Condition()
+		    .withComparisonOperator(ComparisonOperator.EQ)
+		    .withAttributeValueList(new AttributeValue().withS(primaryKeyValue));
+		
+		Condition indexKeyPrefixCondition = new Condition()
+			.withComparisonOperator(ComparisonOperator.BEGINS_WITH)
+			.withAttributeValueList(new AttributeValue().withS(indexKeyPrefix));
+		
+		Map<String, Condition> keyConditions = new HashMap<String, Condition>();
+		keyConditions.put(primaryKeyName, primaryKeyCondition);
+		keyConditions.put(indexKeyName, indexKeyPrefixCondition);
+	
+		return query(tableName, keyConditions, indexName);
+	}
+	
+	private List<Map<String, AttributeValue>> query(String tableName, Map<String, Condition> keyConditions, String indexName) {
 		List<Map<String, AttributeValue>> items = new ArrayList<Map<String, AttributeValue>>(100); 
 		
 		Map<String, AttributeValue> lastEvaluatedKey = null;
@@ -201,62 +295,14 @@ public class DynamoHelper {
 			QueryRequest queryRequest = new QueryRequest()
 				.withTableName(tableName)
 				.withKeyConditions(keyConditions);
+
+			if (indexName != null)
+				queryRequest = queryRequest.withIndexName(indexName);
 			
 			if (lastEvaluatedKey != null) {
-				queryRequest = queryRequest.addExclusiveStartKeyEntry(primaryKeyName, lastEvaluatedKey.get(primaryKeyName));
-			} 
-			
-			try {
-				QueryResult result = mDynamoDBClient.query(queryRequest);
-				items.addAll(result.getItems());
-				
-				if (result.getLastEvaluatedKey() == null) {
-					break;
-				} else {
-					lastEvaluatedKey = result.getLastEvaluatedKey();
+				for (String key : lastEvaluatedKey.keySet()) {
+					queryRequest = queryRequest.addExclusiveStartKeyEntry(key, lastEvaluatedKey.get(key));
 				}
-			}
-			catch (ProvisionedThroughputExceededException e) {
-				System.out.println("Provisioned throughput exceeded.. sleeping for a sec");
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e1) {	}
-			}
-			
-			return items;
-		}
-		
-		return items;
-	}
-	
-	/**
-	 * Gets all items by its primary key and a range greater than some threshold (for tables with range key).
-	 * Returns a list of map of attributes
-	 */
-	public List<Map<String, AttributeValue>> queryByPrimaryKeyAndIndexRange(String tableName, String primaryKeyName, String primaryKeyValue, String rangeKeyName, String rangeKeyStart, String indexName) {
-		Condition primaryKeyCondition = new Condition()
-		    .withComparisonOperator(ComparisonOperator.EQ)
-		    .withAttributeValueList(new AttributeValue().withS(primaryKeyValue));
-		
-		Condition rangeKeyCondition = new Condition()
-			.withComparisonOperator(ComparisonOperator.GE)
-			.withAttributeValueList(new AttributeValue().withN(rangeKeyStart));
-	
-		Map<String, Condition> keyConditions = new HashMap<String, Condition>();
-		keyConditions.put(primaryKeyName, primaryKeyCondition);
-		keyConditions.put(rangeKeyName, rangeKeyCondition);
-	
-		List<Map<String, AttributeValue>> items = new ArrayList<Map<String, AttributeValue>>(100); 
-		
-		Map<String, AttributeValue> lastEvaluatedKey = null;
-		while(true) {
-			QueryRequest queryRequest = new QueryRequest()
-				.withTableName(tableName)
-				.withKeyConditions(keyConditions)
-				.withIndexName(indexName);
-			
-			if (lastEvaluatedKey != null) {
-				queryRequest = queryRequest.addExclusiveStartKeyEntry(primaryKeyName, lastEvaluatedKey.get(primaryKeyName));
 			} 
 			
 			try {

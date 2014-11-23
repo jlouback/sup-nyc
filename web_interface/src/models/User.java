@@ -12,6 +12,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 
 public class User {
 	private static final String TABLE_NAME = "supnyc_users";
@@ -21,6 +23,7 @@ public class User {
 	private String mEncryptedPassword;
 	private boolean mActivated;
 	private String mCurrentSessionKey;
+	private String mEventCountJson;
 	
 	// attributes that store the decrypted password only if the user is being created now, otherwise are null
 	private String mPasswordJustSet; 
@@ -37,6 +40,7 @@ public class User {
 		mNewRecord = true;
 		mActivated = false;
 		mCurrentSessionKey = null;
+		mEventCountJson = "{}";
 	}
 	
 	public String getUsername() {return mUsername;}
@@ -69,6 +73,38 @@ public class User {
 	
 	public void setActivated(boolean activated) { mActivated = activated; }
 	public boolean getActivated() { return mActivated; }
+	
+	public void setEventCountJson(String eventCountJson) { mEventCountJson = eventCountJson; }
+	private JSONObject mEventCountCache = null;
+	public void incrementEventCount(String type) {
+		try {
+			if (mEventCountCache == null) {
+				mEventCountCache = new JSONObject(mEventCountJson);
+			}
+			if (mEventCountCache.has(type)) {
+				mEventCountCache.put(type, mEventCountCache.getInt(type) + 1);
+			} else {
+				mEventCountCache.put(type, 1);
+			}
+			mEventCountJson = mEventCountCache.toString();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	public int getEventCount(String type) {
+		try {
+			if (mEventCountCache == null) {
+				mEventCountCache = new JSONObject(mEventCountJson);
+			}
+			if (mEventCountCache.has(type)) {
+					return mEventCountCache.getInt(type);
+			} else {
+				return 0;
+			}
+		} catch (JSONException e) {
+			return 0;
+		}
+	}
 	
 	private static final String EMAIL_REGEXP = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 	private static final String COLUMBIA_EMAIL_REGEXP = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@columbia.edu";
@@ -181,6 +217,7 @@ public class User {
 		attrMap.put("email", new AttributeValue().withS(mEmail));
 		attrMap.put("encrypted_password", new AttributeValue().withS(mEncryptedPassword));
 		attrMap.put("activated", new AttributeValue().withBOOL(mActivated));
+		attrMap.put("event_count_json", new AttributeValue().withS(mEventCountJson));
 		if (mCurrentSessionKey != null)
 			attrMap.put("current_session_key", new AttributeValue().withS(mCurrentSessionKey));
 		return attrMap;
@@ -201,6 +238,8 @@ public class User {
 		user.setEmail(attrMap.get("email").getS());
 		user.setEncryptedPassword(attrMap.get("encrypted_password").getS());
 		user.setActivated(attrMap.get("activated").getBOOL());
+		if (attrMap.containsKey("event_count_json"))
+			user.setEventCountJson(attrMap.get("event_count_json").getS());
 		if (attrMap.containsKey("current_session_key"))
 			user.setCurrentSessionKey(attrMap.get("current_session_key").getS());
 		user.markAsNotNewRecord();

@@ -1,0 +1,71 @@
+GETTING EVENTS
+#######################################################
+
+Parameters:
+	- type = ['party', 'bar', 'dinner' or 'culture']
+	- start = time in millis. If not passed server will use current time
+	- end = time in millis. If not passed server will use start time + one week
+
+Example:
+curl "http://supnyc.elasticbeanstalk.com/events_api?type=party&start=1418970300000&end=1421000000000"
+
+Response:
+[
+	{
+		"type":"party",
+		"title":"Columbia Winter Festival",
+		"range_key":"1418970300000hs2807    1d84c80a6d77cf2d3cc903ec61b3ea1e",
+		"address":"3000 Broadway, New York, NY",
+		"latitude":40.8093826,
+		"longitude":-73.96219710000003
+		"start":1418970300000,
+		"host_username":"hs2807",
+		"like_count":0,
+		"dislike_count":0,
+		"going_count":0,
+	},
+	{
+		"type":"party",
+		"title":"New Year's Eve Party",
+		"range_key":"1420039800000hs2807    cada8294feba8eb4beb3a953c3e93007",
+		"description":"The most traditional open air party of the year! Come celebrate with us!",
+		"address":"Times Square, New York, NY",
+		"latitude":40.759011,
+		"longitude":-73.98447220000003
+		"start":1420039800000,
+		"end":1420099200000,
+		"host_username":"hs2807",
+		"like_count":0,
+		"dislike_count":0,
+		"going_count":0,
+		"image_url":"..." // not implemented yet so this attribute won't actually be in the JSON object
+	}
+]
+
+Observation: 
+the only attribute that is not purely informative in this JSON is "range_key". The android app will need that value together with the event type to send updates to the server (like communicating a "like", "dislike" or "going")
+
+
+UPDATE EVENTS
+#########################################################
+
+Parameters:
+	- type = ['party', 'bar', 'dinner' or 'culture']
+	- range_key = the range key of the event
+	- action = ['like', 'dislike' or 'going']
+	- undo = ['true'] optional parameter. Pass it in case you want to undo the like or dislike or going
+
+Example:
+curl --data "type=party&range_key=1418970300000hs2807    1d84c80a6d77cf2d3cc903ec61b3ea1e&action=like" http://supnyc.elasticbeanstalk.com/events_api
+
+Response:
+{"result":"ok"} or {"result":"error", "reason":"some reason for the error"}
+
+Same route as the GET request, but make it a POST and put the parameters in the body of the request (like a regular POST request)
+
+Observations: 
+
+- The android app must keep track which events have been marked as liked, disliked or going. The app should use this information for two purposes: 1) it should not allow the user to mark twice the same event (it is expensive for the server to do that) and 2) it should display that the event is liked or disliked or the user intend to go.
+
+- The android app should only consider an even as "liked" or "disliked" or "going" if it has received the {"status":"ok"} response, otherwise consider the operation did not work.
+

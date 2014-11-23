@@ -4,7 +4,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-		<title>Tweet Map</title>
+		<title>Sup NYC</title>
 		
 		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" /> <!-- Optional theme -->
@@ -16,7 +16,7 @@
   	<body>
   		<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
   			<div class="navbar-header">
-		      <a class="navbar-brand" href="#">Tweet Map</a>
+		      <a class="navbar-brand" href="#">Sup NYC</a>
 		    </div>
 		</nav>
 		<div class="container">
@@ -38,7 +38,7 @@
 			
 	    	<div class="row">
 				<div id="home_jumbotron" class="jumbotron col-xs-12">
-					<h1>Tweet Map</h1>
+					<h1>Sup NYC</h1>
 					<p>This is a class project for E6998 Big Data &amp; Cloud Computing course at Columbia University.</p>
 					<p>Students: <span class="link-blue" data-toggle="tooltip" data-placement="right" data-html="true" title="hs2807 - please login using my Columbia Mail and my UNI as password">Henrique Gubert</span>, Juliana Louback, Radu Moldoveanu</p>
 					<p><a class="btn btn-lg btn-primary" href="#" role="button" id="login_button" data-toggle="collapse" data-target="#login_form" data-parent="#login_signup_forms">Login now!</a></p>
@@ -50,12 +50,12 @@
 					<div id="login_form" class="col-xs-4 collapse panel-collapse login_signup_form ${(login_user eq null ? '' : 'in')}">
 						<form role="form" action="home" method="post">
 						  <div class="form-group">
-						    <label for="login_email">Email</label>
-						    <input type="email" class="form-control" name="login_email" placeholder="Enter email" value="${login_user.email}" autofocus>
+						    <label for="login_username">Username</label>
+						    <input type="text" class="form-control" name="login_username" placeholder="Enter username" value="${login_user.username}" autofocus>
 						  </div>
 						  <div class="form-group">
 						    <label for="login_password">Password</label>
-						    <input type="password" class="form-control" name="login_password" placeholder="Password" value="${signup_user.password}">
+						    <input type="password" class="form-control" name="login_password" placeholder="Password" value="${login_user.password}">
 						  </div>
 						  <input type="hidden" name="form_name" value="login"/>
 						  <button type="submit" class="btn btn-primary">Login</button>
@@ -67,8 +67,8 @@
 					<div id="signup_form" class="col-xs-4 collapse panel-collapse login_signup_form ${(signup_user eq null ? '' : 'in')}">
 						<form role="form" action="home" method="post">
 						  <div class="form-group">
-						    <label for="name">Name</label>
-						    <input type="text" class="form-control" name="name" placeholder="Enter name" value="${signup_user.name}">
+						    <label for="username">Username</label>
+						    <input type="text" class="form-control" name="username" placeholder="Enter username" value="${signup_user.username}">
 						  </div>
 						  <div class="form-group">
 						    <label for="email">Email</label>

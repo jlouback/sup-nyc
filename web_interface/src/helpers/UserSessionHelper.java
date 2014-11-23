@@ -9,6 +9,9 @@ import models.User;
 
 public class UserSessionHelper {
 
+	private static final String USER_SESSION_IDENTIFIER_NAME = "user_session_username";
+	private static final String USER_SESSION_KEY_NAME = "user_session_key";
+	
 	/**
 	 * Logs this user in.
 	 * This method creates a random login key that is persisted in the database and 
@@ -19,19 +22,21 @@ public class UserSessionHelper {
 		String sessionKey = generateSessionKey();
 		user.setCurrentSessionKey(sessionKey);
 		if (user.save()) {
-			session.setAttribute("user_session_email", user.getEmail());
-			session.setAttribute("user_session_key", sessionKey);
+			session.setAttribute(USER_SESSION_IDENTIFIER_NAME, user.getUsername());
+			session.setAttribute(USER_SESSION_KEY_NAME, sessionKey);
 			return true;
 		}
 		return false;
 	}
 	
 	public static void logoff(User user, HttpSession session) {
-		session.removeAttribute("user_session_email");
-		session.removeAttribute("user_session_key");
+		session.removeAttribute(USER_SESSION_IDENTIFIER_NAME);
+		session.removeAttribute(USER_SESSION_KEY_NAME);
 		
-		user.setCurrentSessionKey(null);
-		user.save();
+		if (user != null) {
+			user.setCurrentSessionKey(null);
+			user.save();
+		}
 	}
 	
 	/**
@@ -39,18 +44,18 @@ public class UserSessionHelper {
 	 * In case some info does not match, ensure the session is cleared.
 	 */
 	public static User getLoggedUser(HttpSession session) {
-		String email = (String) session.getAttribute("user_session_email");
-		if (email != null) {
-			String key = (String) session.getAttribute("user_session_key");
+		String username = (String) session.getAttribute(USER_SESSION_IDENTIFIER_NAME);
+		if (username != null) {
+			String key = (String) session.getAttribute(USER_SESSION_KEY_NAME);
 			if (key != null) {
-				User user = User.loadFromDynamo(email);
+				User user = User.loadFromDynamo(username);
 				if (user != null && user.getCurrentSessionKey().equals(key)) {
 					return user;
 				}
 			}
 		}
-		session.removeAttribute("user_session_email");
-		session.removeAttribute("user_session_key");
+		session.removeAttribute(USER_SESSION_IDENTIFIER_NAME);
+		session.removeAttribute(USER_SESSION_KEY_NAME);
 		return null;
 	}
 	

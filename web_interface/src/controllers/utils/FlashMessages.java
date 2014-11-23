@@ -18,4 +18,12 @@ public class FlashMessages {
 	static public void addErrorMessage(HttpServletRequest request, String message) {
 		request.getSession().setAttribute("error_message", message);
 	}
+	
+	static public void addSuccessMessageNow(HttpServletRequest request, String message) {
+		request.setAttribute("success_message", message);
+	}
+
+	static public void addErrorMessageNow(HttpServletRequest request, String message) {
+		request.setAttribute("error_message", message);
+	}
 }

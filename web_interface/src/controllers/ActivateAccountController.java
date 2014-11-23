@@ -23,10 +23,10 @@ public class ActivateAccountController extends HttpServlet {
 
     @Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String email = request.getParameter("email");
+		String username = request.getParameter("username");
 		String key = request.getParameter("key");
     	
-		User user = User.loadFromDynamo(email);
+		User user = User.loadFromDynamo(username);
 		if (user == null || user.getActivated() || !user.getEncryptedPassword().equals(key)) {
 			FlashMessages.addErrorMessage(request, "Invalid activation request!");
         	response.sendRedirect("home");
@@ -34,19 +34,13 @@ public class ActivateAccountController extends HttpServlet {
 			// activate user
 			user.setActivated(true);
 			
-			if (user.save()) {
-				if (UserSessionHelper.login(user, request.getSession())) {
-					FlashMessages.addSuccessMessage(request, "Account activated!");
-					response.sendRedirect("map");
-				}
-				else {
-					FlashMessages.addSuccessMessage(request, "Account activated!");
-					response.sendRedirect("home");
-				}
-			} 
+			if (UserSessionHelper.login(user, request.getSession())) {
+				FlashMessages.addSuccessMessage(request, "Account activated!");
+				response.sendRedirect("events_list");
+			}
 			else {
-				FlashMessages.addErrorMessage(request, "An error has occured during activation!");
-	        	response.sendRedirect("home");
+				FlashMessages.addSuccessMessage(request, "An error has occured during activation!");
+				response.sendRedirect("home");
 			}
 		}
 	}

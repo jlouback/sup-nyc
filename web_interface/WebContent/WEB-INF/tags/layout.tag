@@ -5,18 +5,21 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-		<title>Tweet Map</title>
+		<title>Sup NYC</title>
 		
 		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" /> <!-- Optional theme -->
 		<link rel="stylesheet" type="text/css" href="resources/stylesheets/main.css" />
+		<link rel="stylesheet" type="text/css" href="resources/stylesheets/bootstrap-datetimepicker.min.css" />
 
 		<script src="resources/javascripts/jquery-1.11.1.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 		<script type="text/javascript"
 			src="http://maps.googleapis.com/maps/api/js?libraries=visualization&key=AIzaSyBTCbY_Kgc3UPMtGzq8XfqyaBZfaf4sX9U&sensor=false&language=en-us">
 		</script>
-		<script src="resources/javascripts/heatmap.js"></script>
+		<script src="resources/javascripts/moment.min.js"></script>
+		<script src="resources/javascripts/bootstrap.min.js"></script>
+		<script src="resources/javascripts/bootstrap-datetimepicker.min.js"></script>
 		
 	</head>
   	<body>
@@ -24,15 +27,16 @@
 	    <div class="navbar navbar-default navbar-static-top" role="navigation">
 	      <div class="container">
 	        <div class="navbar-header">
-	          <a class="navbar-brand" href="map">Tweet Map</a>
+	          <a class="navbar-brand" href="events_list">Sup NYC</a>
 	        </div>
 	        <div class="navbar-collapse collapse">
 	          <ul class="nav navbar-nav">
-	            <li class="${activeTab eq 'map' ? 'active' : ''}"><a href="map"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+	            <li class="${activeTab eq 'events_list' ? 'active' : ''}"><a href="events_list"><span class="glyphicon glyphicon-globe" style="width:14px"></span> Events</a></li>
 	          </ul>
+	          <a href="new_event" class="btn btn-primary navbar-btn navbar-left" style="margin-left:10px"><span class="glyphicon glyphicon-plus" style="width:14px"></span> New Event</a>
 	          <ul class="nav navbar-nav navbar-right">
-	          	<li class="${activeTab eq 'account' ? 'active' : ''}"><a href="account"><span class="glyphicon glyphicon-user"></span> Account</a></li>
-	            <li><a href="logout"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
+	          	<li class="${activeTab eq 'account' ? 'active' : ''}"><a href="account"><span class="glyphicon glyphicon-user" style="width:14px"></span> Account</a></li>
+	            <li><a href="logout"><span class="glyphicon glyphicon-off" style="width:14px"></span> Logout</a></li>
 	          </ul>
 	        </div>
 	      </div>

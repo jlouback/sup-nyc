@@ -18,7 +18,10 @@ import controllers.utils.StringRenderer;
 @WebServlet("/home")
 public class HomeController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
+    
+	private static final String FIRST_PAGE_URL = "events_list";
+	private static final String HOME_VIEW = "/WEB-INF/views/home.jsp";
+	
     public HomeController() {
         super();
     }
@@ -27,11 +30,11 @@ public class HomeController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	// checks if user already logged in
     	if (UserSessionHelper.getLoggedUser(request.getSession()) != null) {
-    		response.sendRedirect("map");
+    		response.sendRedirect(FIRST_PAGE_URL);
     	}
     	else {
 	    	FlashMessages.extractFlashMessages(request);
-	    	request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+	    	request.getRequestDispatcher(HOME_VIEW).forward(request, response);
     	}
 	}
 
@@ -40,32 +43,32 @@ public class HomeController extends HttpServlet {
 		String formName = request.getParameter("form_name");
 	
 		if (formName.equals("login")) {
-			String email = request.getParameter("login_email");
+			String username = request.getParameter("login_username");
 			String password = request.getParameter("login_password");
-			User user = User.loadFromDynamo(email);
+			User user = User.loadFromDynamo(username);
 		
 			if (user != null && user.checkPassword(password)) {
 				if (user.getActivated()) {
 					if (UserSessionHelper.login(user, request.getSession())) {
-						response.sendRedirect("map");
+						response.sendRedirect(FIRST_PAGE_URL);
 					}
 					else {
-						request.setAttribute("error_message", "An error occured during log in.");
-						request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+						FlashMessages.addErrorMessageNow(request, "An error occured during log in.");
+						request.getRequestDispatcher(HOME_VIEW).forward(request, response);
 					}
 				} else {
-					request.setAttribute("error_message", "You have to activate your account first. Check your email.");
-					request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+					FlashMessages.addErrorMessageNow(request, "You have to activate your account first. Check your email.");
+					request.getRequestDispatcher(HOME_VIEW).forward(request, response);
 				}
 			}
 			else {
 				User loginUser = new User();
-				loginUser.setEmail(email);
+				loginUser.setUsername(username);
 				loginUser.setPassword(password);
 				
 				request.setAttribute("login_user", loginUser);
-				request.setAttribute("error_message", "Email or password is wrong.");
-				request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+				FlashMessages.addErrorMessageNow(request, "Email or password is wrong.");
+				request.getRequestDispatcher(HOME_VIEW).forward(request, response);
 			}
 		} 
 		else {
@@ -75,16 +78,16 @@ public class HomeController extends HttpServlet {
 				StringRenderer emailRenderer = new StringRenderer(response);
 				request.setAttribute("user", user);
 				request.getRequestDispatcher("/WEB-INF/views/signup_confirmation_email.jsp").forward(request, emailRenderer);
-				EmailSenderHelper.getInstance().sendEmail(user.getEmail(), "Welcome to Tweet Map!", emailRenderer.getOutput());
+				EmailSenderHelper.getInstance().sendEmail(user.getEmail(), "Welcome to Sup NYC!", emailRenderer.getOutput());
 				
 				request.removeAttribute("user");
-				request.setAttribute("success_message", "Account created successfully!<br>You will receive an email to confirm the validity of your email address.");
-				request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+				FlashMessages.addSuccessMessageNow(request, "Account created successfully!<br>You will receive an email to confirm the validity of your email address.");
+				request.getRequestDispatcher(HOME_VIEW).forward(request, response);
 			}
 			else {
-				request.setAttribute("error_message", user.getValidationErrorMessage());
+				FlashMessages.addErrorMessageNow(request, user.getValidationErrorMessage());
 				request.setAttribute("signup_user", user);
-				request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
+				request.getRequestDispatcher(HOME_VIEW).forward(request, response);
 			}
 		}
 	}

@@ -7,10 +7,14 @@
 <div class="row">
 	<div class="col-xs-12 col-md-6 col-lg-6">
 		<form role="form" action="account" method="post">
-		  <h3>Edit Name</h3>
+		  <h3>Edit account information</h3>
 		  <div class="form-group">
-		    <label for="name">Name</label>
-		    <input type="text" class="form-control" name="name" value="${user.name}">
+		    <label for="username">Username</label>
+		    <input type="text" class="form-control" name="username" value="${user.username}" disabled="true">
+		  </div>
+		  <div class="form-group">
+		    <label for="email">Email</label>
+		    <input type="email" class="form-control" name="email" value="${user.email}" disabled="true">
 		  </div>
 		  
 		  <h3>Change password</h3>
