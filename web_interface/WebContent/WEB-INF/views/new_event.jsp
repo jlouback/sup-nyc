@@ -6,7 +6,7 @@
 	<h1>New Event</h1>
 	<div class="row">
 		<div class="col-xs-12 col-md-8 col-lg-6">
-			<form role="form" action="new_event" method="post" id="new_event_form">
+			<form role="form" action="new_event" method="post" id="new_event_form" enctype="multipart/form-data">
 				<div class="form-group">
 					<label for="type">Type</label>
 					<select name="type" class="form-control">
@@ -46,8 +46,8 @@
 	                </div>
 	            </div>
 				<div class="form-group">
-					<label for="video">Image (00x00)</label>
-					<input type="file">
+					<label for="video">Image</label>
+					<input type="file" name="imagefile">
 					<p class="help-block">Upload you image here</p>
 				</div>
 				<input id="latitude" type="hidden" name="latitude"/>

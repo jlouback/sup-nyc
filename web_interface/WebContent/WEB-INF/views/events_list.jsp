@@ -17,7 +17,14 @@
 		<c:forEach var="event" items="${events}">
 		  	<a href="#" class="list-group-item row">
 		    	<div class="col-xs-12 col-md-2">
-			    	<img src="resources/images/thumb_242x200.svg" class="img-rounded" height=100px>
+		    		<c:choose>
+					      <c:when test='${not empty event.imageUrl}'>
+					        <img src="${event.imageUrl}" class="img-rounded" height=100px>
+					      </c:when>
+					      <c:otherwise>
+					      	<img src="resources/images/thumb_242x200.svg" class="img-rounded" height=100px>
+					      </c:otherwise>
+					</c:choose>
 				</div>
 		    	<div class="col-xs-12 col-md-8">
 			    	<h4 class="list-group-item-heading">${event.title}</h4>

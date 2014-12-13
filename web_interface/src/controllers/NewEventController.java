@@ -1,21 +1,28 @@
 package controllers;
 
+import helpers.S3Helper;
 import helpers.UserSessionHelper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 import models.Event;
 import models.User;
 import controllers.utils.FlashMessages;
 
 @WebServlet("/new_event")
+@MultipartConfig(fileSizeThreshold=1024*1024*2, // 2MB
+                 maxFileSize=1024*1024*2,      // 2MB
+                 maxRequestSize=1024*1024*10)   // 10MB
 public class NewEventController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
@@ -53,9 +60,24 @@ public class NewEventController extends HttpServlet {
 				event = Event.buildFromForm(request.getParameterMap());
 	    		event.setHostUsername(user.getUsername());
 	    		
+	    		if (event.valid()) { 
+		    		Part imagefilepart = request.getPart("imagefile");
+		    		if ((imagefilepart != null) && imagefilepart.getSize() > 0) {
+		    			event.setImageUrl("https://s3.amazonaws.com/" + S3Helper.IMAGES_BUCKET + "/" + event.getRangeKeyBeginningWithStart().replaceAll("\\s", "_"));
+		    		}
+	    		}
+	    		
 	    		if (event.save()) {
 	    			user.incrementEventCount(event.getType());
 	    			user.save();
+	    			
+	    			Part imagefilepart = request.getPart("imagefile");
+	    			if ((imagefilepart != null) && imagefilepart.getSize() > 0) {
+	    				InputStream is = imagefilepart.getInputStream();
+	    				String contentType = imagefilepart.getContentType();
+	    				String key = event.getRangeKeyBeginningWithStart().replaceAll("\\s", "_");
+	    				S3Helper.getInstance().uploadImage(S3Helper.IMAGES_BUCKET, key, is, contentType);
+	    			}
 	    			
 	    			FlashMessages.addSuccessMessage(request, "Event created");
 		    		response.sendRedirect("events_list");
