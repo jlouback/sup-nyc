@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.ConditionalOperator;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
@@ -175,6 +176,22 @@ public class DynamoHelper {
 			PutItemRequest putItemRequest = new PutItemRequest()
 				.withTableName(tableName)
 				.withItem(attributeMap);
+			mDynamoDBClient.putItem(putItemRequest);
+			return true;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean conditionalPutItem(String tableName, String keyName, Map<String, AttributeValue> attributeMap) {
+		try {			
+			PutItemRequest putItemRequest = new PutItemRequest()
+				.withTableName(tableName)
+				.withItem(attributeMap)
+				.withConditionExpression("attribute_not_exists(" + keyName + ")");
+			
 			mDynamoDBClient.putItem(putItemRequest);
 			return true;
 		}

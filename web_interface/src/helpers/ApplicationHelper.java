@@ -5,6 +5,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import models.Event;
+import models.MobileUser;
 import models.User;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -44,6 +45,7 @@ public class ApplicationHelper implements ServletContextListener {
 	static public void ensureTablesExist() throws IOException {
 		User.ensureTableExists();
 		Event.ensureTableExists();
+		MobileUser.ensureTableExists();
 	}
 
 }

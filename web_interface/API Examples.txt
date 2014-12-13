@@ -59,7 +59,7 @@ Example:
 curl --data "type=party&range_key=1418970300000hs2807    1d84c80a6d77cf2d3cc903ec61b3ea1e&action=like" http://supnyc.elasticbeanstalk.com/events_api
 
 Response:
-{"result":"ok"} or {"result":"error", "reason":"some reason for the error"}
+{"status":"ok"} or {"status":"error", "reason":"some reason for the error"}
 
 Same route as the GET request, but make it a POST and put the parameters in the body of the request (like a regular POST request)
 
@@ -69,3 +69,36 @@ Observations:
 
 - The android app should only consider an even as "liked" or "disliked" or "going" if it has received the {"status":"ok"} response, otherwise consider the operation did not work.
 
+
+
+REGISTER MOBILE USER
+#########################################################
+
+Parameters:
+	- email
+	- encryptedPassword: MD5 hash of the password
+
+Example:
+curl --data "email=my@email.com&encryptedPassword=b5d6b536be5793650296177928532768" http://supnyc.elasticbeanstalk.com/mobile_users_api" 
+
+Possible responses:
+{"status":"error","reason":"email already exists"}
+{"status":"error","reason":"missing parameters in the request"}
+{"status":"ok"}
+
+
+
+AUTHENTICATE MOBILE USER
+#########################################################
+
+Parameters:
+	- email
+	- encryptedPassword: MD5 hash of the password
+
+Example:
+curl "http://supnyc.elasticbeanstalk.com/mobile_users_api?email=my@email.com&encryptedPassword=b5d6b536be5793650296177928532768" 
+
+Possible responses:
+{"status":"error","reason":"authentication failed"}
+{"status":"error","reason":"missing parameters in the request"}
+{"status":"ok"}
